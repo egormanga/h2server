@@ -1,15 +1,11 @@
 [project]
 name = 'h2server'
-version = '0.1.0'
-description = "Simple AsyncIO-based HTTP/2 server"
-authors = [
-	{name = "Egor Vorontsov", email = "sdoregor@sdore.me"},
-]
+version = '0.2.0'
+description = "Simple AsyncIO-based HTTP/2-only server protocol implementation"
+authors = [{name = "Egor Vorontsov", email = "sdoregor@sdore.me"}]
 license = 'AGPL-3.0-or-later'
 requires-python = '~=3.11'
-dependencies = [
-	'h2>=4.4.1',
-]
+dependencies = ['h2 ~= 4.4.1']
 
 [build-system]
 requires = ['pdm-backend']

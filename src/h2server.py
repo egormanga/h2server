@@ -11,6 +11,7 @@ import json
 
 from h2.config import H2Configuration
 from h2.connection import H2Connection
+from h2.errors import ErrorCodes
 from h2.events import (
 	ConnectionTerminated,
 	DataReceived,
@@ -20,9 +21,19 @@ from h2.events import (
 	StreamReset,
 	WindowUpdated,
 )
-from h2.errors import ErrorCodes
 from h2.exceptions import ProtocolError, StreamClosedError
 from h2.settings import SettingCodes
+from h2.utilities import HeaderTuple
+
+class HeaderDict(collections.OrderedDict):
+	def __getitem__(self, key, /):
+		return super().__getitem__(key.casefold())
+
+	def __setitem__(self, key, value, /):
+		return super().__setitem__(key.casefold(), value)
+
+	def get(self, key, default=None, /):
+		return super().get(key.casefold(), default)
 
 class H2Protocol(asyncio.Protocol, abc.ABC):
 	class _BaseBody:
@@ -74,7 +85,7 @@ class H2Protocol(asyncio.Protocol, abc.ABC):
 	@dataclasses.dataclass(slots=True, weakref_slot=True)
 	class Response(_BaseBody):
 		status: HTTPStatus
-		headers: dict[str, str] = dataclasses.field(default_factory=dict)
+		headers: dict[str, str] = dataclasses.field(default_factory=HeaderDict)
 		raw: io.BytesIO | None = None
 		encoding: str | None = None
 
@@ -128,8 +139,8 @@ class H2Protocol(asyncio.Protocol, abc.ABC):
 
 				self.transport.write(self.conn.data_to_send())
 
-	def request_received(self, stream_id: int, headers: list[tuple[str, str]], stream_ended: StreamEnded | None = None):
-		headers = collections.OrderedDict(headers)
+	def request_received(self, stream_id: int, headers: list[HeaderTuple], stream_ended: StreamEnded | None = None):
+		headers = HeaderDict(headers)
 		self.stream_data[stream_id] = self.Request(
 			method=headers.pop(':method'),
 			scheme=headers.pop(':scheme', None),
